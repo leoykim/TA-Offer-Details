@@ -1,0 +1,94 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure
+
+from google.colab import files
+uploaded = files.upload()
+
+
+##### CLEAN DF #####
+df = pd.read_excel('offer_details_07-12-2021.xlsx', sheet_name='Offer Details', header=3)
+
+#drop columns
+df.drop(['Opening ID', 'Referrer', 'Application Date', 'Created', 'Start Date', 'Rejection Reason', 
+         'Preferred Name', 'Job Title' ,'Location', 'Business Unit', 'Legal Entity', 'Benefits Effective Date', 
+         'Paid Time Off', 'Sign-On Bonus', 'Performance Review Schedule', 'Pay Cycle', 'IsPaid'], axis=1, inplace=True)
+
+#change currency to #s
+from decimal import Decimal
+df['Pay Rate'] = df['Pay Rate'].str.replace('[$€,]', '').astype('float')
+df[['Sent', 'Resolved']] = df[['Sent', 'Resolved']].apply(pd.to_datetime)
+
+print(df.isnull().sum())
+df = df[df['Sent'].notna()]
+df.isnull().sum()
+
+
+##### CORRECT DATA ERRORS #####
+#change hourly rate to salary
+indexOfMorganSmith = df.index[df['Candidate'] == 'Morgan Smith']
+df.at[indexOfMorganSmith[0], 'Rate Type'] = 'Salary' #morgan smith incorrect rate type
+
+#change salary to hourly rate
+indexOfIsobelRiant = df.index[df['Candidate'] == 'Isobel Riant']
+df.at[indexOfIsobelRiant[0], 'Pay Rate'] = df.at[indexOfIsobelRiant[0], 'Pay Rate']/2080
+
+indexOfSaloneeSeecharan = df.index[df['Candidate'] == 'Salonee Seecharan']
+df.at[indexOfSaloneeSeecharan[0], 'Pay Rate'] = df.at[indexOfSaloneeSeecharan[0], 'Pay Rate']/2080
+
+indexOfAdrianFebre = df.index[df['Candidate'] == 'Adrian Febre']
+df.at[indexOfAdrianFebre[0], 'Pay Rate'] = df.at[indexOfAdrianFebre[0], 'Pay Rate']/10
+
+#np.where(condition, result if condition met, result if not met)
+df['Pay Rate'] = np.where(df['Rate Type'] == 'Hourly- Full Time', df['Pay Rate'] * 2080, df['Pay Rate'])
+df['Pay Rate'] = np.where(df['Rate Type'] == 'Hourly- Intern', df['Pay Rate'] * 2080, df['Pay Rate'])
+df['Pay Rate'] = np.where(df['Rate Type'] == 'Hourly- Part Time', df['Pay Rate'] * 2080, df['Pay Rate'])
+
+
+##### EXPLORATORY ANALYSIS #####
+maxpay = df['Pay Rate'].max()
+df.loc[df['Pay Rate'] == maxpay]
+
+## NUMBER OF OFFERS MADE
+pd.set_option('display.float_format', '{:.2f}'.format)
+
+#average pay rate per recruiter
+averageOffer = df.groupby('Recruiter').mean().sort_values('Pay Rate', ascending=False).reset_index()
+
+#total offers per recruiter
+offerCount = df.groupby('Recruiter').count().sort_values('Pay Rate', ascending=False)['Candidate'].reset_index()
+
+print('Total Offers: ', offerCount['Candidate'].sum())
+
+dfcombine= pd.merge(averageOffer, offerCount, on='Recruiter').sort_values('Candidate')
+dfcombine.reset_index(inplace=True, drop=True)
+display(dfcombine)
+
+figure(figsize=(5,4), dpi=100)
+plt.barh(dfcombine['Recruiter'], dfcombine['Candidate'])
+plt.xlabel('Total Offers')
+# plt.savefig('offer count.png', bbox_inches='tight')
+# files.download('offer count.png')
+plt.show()
+
+
+## AVERAGE SALARY OFFERS
+dfcombine= dfcombine.sort_values('Pay Rate')
+
+fig, ax = plt.subplots()
+ax.barh(dfcombine['Recruiter'], dfcombine['Pay Rate'])
+
+#add thousand separator
+import matplotlib.ticker as mtick
+fmt = '{x:,.0f}'
+tick = mtick.StrMethodFormatter(fmt)
+ax.xaxis.set_major_formatter(tick) 
+
+fig.set_size_inches(10,5)
+
+fig.savefig('average offer amount.png', bbox_inches='tight')
+files.download('average offer amount.png')
+
+
+# df.groupby(df['Source']).count()
