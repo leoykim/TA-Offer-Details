@@ -27,18 +27,18 @@ df.isnull().sum()
 
 ##### CORRECT DATA ERRORS #####
 #change hourly rate to salary
-indexOfMorganSmith = df.index[df['Candidate'] == 'Morgan Smith']
-df.at[indexOfMorganSmith[0], 'Rate Type'] = 'Salary' #morgan smith incorrect rate type
+indexOfLeoKim1 = df.index[df['Candidate'] == 'Leo Kim1']
+df.at[indexOfLeoKim1[0], 'Rate Type'] = 'Salary' #leo kim incorrect rate type
 
 #change salary to hourly rate
-indexOfIsobelRiant = df.index[df['Candidate'] == 'Isobel Riant']
-df.at[indexOfIsobelRiant[0], 'Pay Rate'] = df.at[indexOfIsobelRiant[0], 'Pay Rate']/2080
+indexOfLeoKim2 = df.index[df['Candidate'] == 'Leo Kim2']
+df.at[indexOfLeoKim2[0], 'Pay Rate'] = df.at[indexOfLeoKim2[0], 'Pay Rate']/2080
 
-indexOfSaloneeSeecharan = df.index[df['Candidate'] == 'Salonee Seecharan']
-df.at[indexOfSaloneeSeecharan[0], 'Pay Rate'] = df.at[indexOfSaloneeSeecharan[0], 'Pay Rate']/2080
+indexOfLeoKim3 = df.index[df['Candidate'] == 'LeoKim3']
+df.at[indexOfLeoKim3[0], 'Pay Rate'] = df.at[indexOfLeoKim3[0], 'Pay Rate']/2080
 
-indexOfAdrianFebre = df.index[df['Candidate'] == 'Adrian Febre']
-df.at[indexOfAdrianFebre[0], 'Pay Rate'] = df.at[indexOfAdrianFebre[0], 'Pay Rate']/10
+indexOfLeoKim4 = df.index[df['Candidate'] == 'LeoKim4']
+df.at[indexOfLeoKim4[0], 'Pay Rate'] = df.at[indexOfLeoKim4[0], 'Pay Rate']/10
 
 #np.where(condition, result if condition met, result if not met)
 df['Pay Rate'] = np.where(df['Rate Type'] == 'Hourly- Full Time', df['Pay Rate'] * 2080, df['Pay Rate'])
